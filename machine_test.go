@@ -19,11 +19,11 @@ const (
 		---------------------------------------------
 		----.`
 
-	complexTest = `++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.`
-
-	overflowTest = `>+++<<`
-
-	unclosedCycleTest1 = `>++[[-]`
+	complexTest1       = `++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.`
+	complexTest2       = `++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.`
+	complexTest3       = `++++[>++++<-]>[>+>++>[+++++++>]+++[<]>-]>>>>>>>>-.<<<<.<..+++.<.>>>>.<<<.+++.------.>-.<<+.<------.`
+	overflowTest       = `>+++<<`
+	unclosedCycleTest1 = `>+++[-[-]`
 	unclosedCycleTest2 = `>++[-]]`
 	unclosedCycleTest3 = `>++][-]`
 	unclosedCycleTest4 = `>++[-][`
@@ -42,9 +42,19 @@ func TestExecute(t *testing.T) {
 			exp:    "Hello World!",
 		},
 		{
-			name:   "complex",
-			reader: bytes.NewBufferString(complexTest),
+			name:   "complex_1",
+			reader: bytes.NewBufferString(complexTest1),
 			exp:    "Hello World!",
+		},
+		{
+			name:   "complex_2",
+			reader: bytes.NewBufferString(complexTest2),
+			exp:    "Hello World!\n",
+		},
+		{
+			name:   "complex_3",
+			reader: bytes.NewBufferString(complexTest3),
+			exp:    "Hello World!\n",
 		},
 		{
 			name:   "memory_overflow",
@@ -74,13 +84,16 @@ func TestExecute(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := Execute(tt.reader)
+			var out bytes.Buffer
+			var m Machine
+
+			err := m.Execute(tt.reader, &out)
 			if tt.err != err {
 				t.Fatal(err)
 			}
 
-			if !bytes.Equal([]byte(tt.exp), result) {
-				t.Error(fmt.Sprintf("expected: '%s', got: '%s'", tt.exp, string(result)))
+			if !bytes.Equal([]byte(tt.exp), out.Bytes()) {
+				t.Error(fmt.Sprintf("expected: '%s', got: '%s'", tt.exp, out.String()))
 			}
 		})
 	}
